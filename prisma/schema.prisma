@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int          @id @default(autoincrement())
+  name         String
+  email        String       @unique
+  password     String
+  role         Role
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  advisors     Advisor[]
+  colleges     College[]
+  companies    Company[]
+  departments  Department[]
+  students     Student[]
+  universities University[]
+}
+
+model University {
+  id       Int       @id @default(autoincrement())
+  userId   Int
+  colleges College[]
+  user     User      @relation(fields: [userId], references: [id])
+}
+
+model College {
+  id           Int          @id @default(autoincrement())
+  universityId Int
+  userId       Int
+  university   University   @relation(fields: [universityId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
+  departments  Department[]
+}
+
+model Department {
+  id        Int       @id @default(autoincrement())
+  collegeId Int
+  userId    Int
+  advisors  Advisor[]
+  college   College   @relation(fields: [collegeId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+  students  Student[]
+}
+
+model Advisor {
+  id           Int        @id @default(autoincrement())
+  departmentId Int
+  userId       Int
+  department   Department @relation(fields: [departmentId], references: [id])
+  user         User       @relation(fields: [userId], references: [id])
+}
+
+model Student {
+  id           Int         @id @default(autoincrement())
+  year         Int
+  universityId Int?
+  collegeId    Int?
+  departmentId Int?
+  userId       Int
+  department   Department? @relation(fields: [departmentId], references: [id])
+  user         User        @relation(fields: [userId], references: [id])
+}
+
+model Company {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  UNIVERSITY
+  COMPANY
+  COLLEGE
+  DEPARTMENT
+  ADVISOR
+  STUDENT
+}
