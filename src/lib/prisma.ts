@@ -8,7 +8,24 @@ export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
     log: ["error", "warn"],
+    datasources: {
+      db: {
+        url: process.env.DATABASE_URL,
+      },
+    },
+    // Add connection timeout and retry configuration
+    __internal: {
+      engine: {
+        connectTimeout: 10000, // 10 seconds
+      },
+    },
   });
+
+// Handle connection errors gracefully
+prisma.$connect().catch((error) => {
+  console.error("Failed to connect to database:", error);
+  // Don't throw - let individual queries handle errors
+});
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;

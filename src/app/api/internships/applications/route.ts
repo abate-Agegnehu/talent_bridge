@@ -1,13 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  handleCreateUniversity,
-  handleGetAllUniversities,
-} from "@/controllers/institutionController";
-
-export async function GET() {
-  const result = await handleGetAllUniversities();
-  return NextResponse.json(result.body, { status: result.status });
-}
+import { handleCreateInternshipApplication } from "@/controllers/internshipController";
 
 export async function POST(request: NextRequest) {
   let body: unknown;
@@ -21,7 +13,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const result = await handleCreateUniversity(body);
+  const result = await handleCreateInternshipApplication(body);
   return NextResponse.json(result.body, { status: result.status });
 }
-

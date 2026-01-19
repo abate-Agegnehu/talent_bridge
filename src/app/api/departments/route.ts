@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { handleCreateDepartment } from "@/controllers/institutionController";
+import {
+  handleCreateDepartment,
+  handleGetAllDepartments,
+} from "@/controllers/institutionController";
+
+export async function GET() {
+  const result = await handleGetAllDepartments();
+  return NextResponse.json(result.body, { status: result.status });
+}
 
 export async function POST(request: NextRequest) {
   let body: unknown;

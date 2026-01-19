@@ -3,6 +3,9 @@ import {
   deleteStudent,
   getAllStudents,
   getStudentById,
+  getStudentsByUniversityAndCollege,
+  getStudentsByUniversityCollegeAndDepartment,
+  getStudentsByUniversityId,
   StudentPayload,
   StudentUpdatePayload,
   updateStudent,
@@ -88,13 +91,45 @@ function validateUpdatePayload(payload: unknown): ValidationResult {
   return { valid: true };
 }
 
-export async function handleGetAllStudents(): Promise<
-  ControllerResult<unknown>
-> {
+export async function handleGetAllStudents(
+  universityId?: number,
+  collegeId?: number,
+  departmentId?: number,
+): Promise<ControllerResult<unknown>> {
   try {
-    const students = await getAllStudents();
+    let students;
+
+    // Filter by universityId, collegeId, and departmentId
+    if (
+      universityId !== undefined &&
+      collegeId !== undefined &&
+      departmentId !== undefined
+    ) {
+      students = await getStudentsByUniversityCollegeAndDepartment(
+        universityId,
+        collegeId,
+        departmentId,
+      );
+    }
+    // Filter by universityId and collegeId
+    else if (universityId !== undefined && collegeId !== undefined) {
+      students = await getStudentsByUniversityAndCollege(
+        universityId,
+        collegeId,
+      );
+    }
+    // Filter by universityId only
+    else if (universityId !== undefined) {
+      students = await getStudentsByUniversityId(universityId);
+    }
+    // Get all students
+    else {
+      students = await getAllStudents();
+    }
+
     return { status: 200, body: students };
   } catch (error) {
+    console.error("Error fetching students:", error);
     return {
       status: 500,
       body: { message: "Failed to fetch students" },
@@ -157,7 +192,7 @@ export async function handleCreateStudent(
       };
     }
     
-    // Handle foreign key constraint errors
+    // Handle foreign key constraint errors (fallback for any Prisma constraint errors)
     if ((error as { code?: string }).code === "P2003") {
       return {
         status: 400,
@@ -165,11 +200,30 @@ export async function handleCreateStudent(
       };
     }
     
+    // Handle specific validation errors for IDs
+    const errorMessage = (error as Error).message || "";
+    if (errorMessage.includes("does not exist")) {
+      return {
+        status: 400,
+        body: { message: errorMessage },
+      };
+    }
+    
+    // Handle transaction timeout errors
+    if (errorMessage.includes("transaction") || errorMessage.includes("timeout")) {
+      return {
+        status: 503,
+        body: { 
+          message: "Database connection timeout. Please try again in a moment.",
+          details: "The database is currently busy. Please retry your request." 
+        },
+      };
+    }
+    
     // Return more detailed error message
-    const errorMessage = (error as Error).message || "Failed to create student";
     return {
       status: 500,
-      body: { message: errorMessage },
+      body: { message: errorMessage || "Failed to create student" },
     };
   }
 }

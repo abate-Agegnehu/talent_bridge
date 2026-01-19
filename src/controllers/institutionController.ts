@@ -9,7 +9,14 @@ import {
   deleteAdvisor,
   DepartmentPayload,
   getAllAdvisors,
+  getAllColleges,
+  getAllDepartments,
+  getAllUniversities,
   getAdvisorById,
+  getAdvisorsByDepartmentId,
+  getCollegeById,
+  getDepartmentById,
+  getUniversityById,
   updateAdvisor,
   UniversityPayload,
 } from "@/services/institutionService";
@@ -112,6 +119,44 @@ function validateAdvisorPayload(payload: unknown): ValidationResult {
   return { valid: true };
 }
 
+export async function handleGetAllUniversities(): Promise<
+  ControllerResult<unknown>
+> {
+  try {
+    const universities = await getAllUniversities();
+    return { status: 200, body: universities };
+  } catch (error) {
+    console.error("Error fetching universities:", error);
+    return {
+      status: 500,
+      body: { message: "Failed to fetch universities" },
+    };
+  }
+}
+
+export async function handleGetUniversityById(
+  id: number,
+): Promise<ControllerResult<unknown>> {
+  try {
+    const university = await getUniversityById(id);
+
+    if (!university) {
+      return {
+        status: 404,
+        body: { message: "University not found" },
+      };
+    }
+
+    return { status: 200, body: university };
+  } catch (error) {
+    console.error("Error fetching university:", error);
+    return {
+      status: 500,
+      body: { message: "Failed to fetch university" },
+    };
+  }
+}
+
 export async function handleCreateUniversity(
   payload: unknown,
 ): Promise<ControllerResult<unknown>> {
@@ -144,6 +189,82 @@ export async function handleCreateUniversity(
     return {
       status: 500,
       body: { message: "Failed to create university" },
+    };
+  }
+}
+
+export async function handleGetAllColleges(): Promise<
+  ControllerResult<unknown>
+> {
+  try {
+    const colleges = await getAllColleges();
+    return { status: 200, body: colleges };
+  } catch (error) {
+    console.error("Error fetching colleges:", error);
+    return {
+      status: 500,
+      body: { message: "Failed to fetch colleges" },
+    };
+  }
+}
+
+export async function handleGetCollegeById(
+  id: number,
+): Promise<ControllerResult<unknown>> {
+  try {
+    const college = await getCollegeById(id);
+
+    if (!college) {
+      return {
+        status: 404,
+        body: { message: "College not found" },
+      };
+    }
+
+    return { status: 200, body: college };
+  } catch (error) {
+    console.error("Error fetching college:", error);
+    return {
+      status: 500,
+      body: { message: "Failed to fetch college" },
+    };
+  }
+}
+
+export async function handleGetAllDepartments(): Promise<
+  ControllerResult<unknown>
+> {
+  try {
+    const departments = await getAllDepartments();
+    return { status: 200, body: departments };
+  } catch (error) {
+    console.error("Error fetching departments:", error);
+    return {
+      status: 500,
+      body: { message: "Failed to fetch departments" },
+    };
+  }
+}
+
+export async function handleGetDepartmentById(
+  id: number,
+): Promise<ControllerResult<unknown>> {
+  try {
+    const department = await getDepartmentById(id);
+
+    if (!department) {
+      return {
+        status: 404,
+        body: { message: "Department not found" },
+      };
+    }
+
+    return { status: 200, body: department };
+  } catch (error) {
+    console.error("Error fetching department:", error);
+    return {
+      status: 500,
+      body: { message: "Failed to fetch department" },
     };
   }
 }
@@ -247,6 +368,30 @@ export async function handleGetAllAdvisors(): Promise<
     return { status: 200, body: advisors };
   } catch (error) {
     console.error("Error fetching advisors:", error);
+    return {
+      status: 500,
+      body: { message: "Failed to fetch advisors" },
+    };
+  }
+}
+
+export async function handleGetAdvisorsByDepartmentId(
+  departmentId: number,
+): Promise<ControllerResult<unknown>> {
+  try {
+    const advisors = await getAdvisorsByDepartmentId(departmentId);
+    return { status: 200, body: advisors };
+  } catch (error) {
+    console.error("Error fetching advisors by department:", error);
+
+    const errorMessage = (error as Error).message;
+    if (errorMessage?.includes("does not exist")) {
+      return {
+        status: 404,
+        body: { message: errorMessage },
+      };
+    }
+
     return {
       status: 500,
       body: { message: "Failed to fetch advisors" },

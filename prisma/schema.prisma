@@ -22,6 +22,8 @@ model User {
   departments  Department[]
   students     Student[]
   universities University[]
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
 }
 
 model University {
@@ -67,13 +69,74 @@ model Student {
   userId       Int
   department   Department? @relation(fields: [departmentId], references: [id])
   user         User        @relation(fields: [userId], references: [id])
+  applications InternshipApplication[]
 }
 
 model Company {
   id        Int      @id @default(autoincrement())
   userId    Int
   user      User     @relation(fields: [userId], references: [id])
+  internships Internship[]
 }
+
+enum InternshipType {
+  REMOTE
+  ONSITE
+  HYBRID
+}
+
+enum InternshipStatus {
+  OPEN
+  CLOSED
+  FILLED
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model Internship {
+  id            Int       @id @default(autoincrement())
+
+  // Relations
+  companyId     Int
+  company       Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  // Core internship info
+  title         String
+  description   String
+  requirements  String?
+  responsibilities String?
+  location      String
+  type          InternshipType  
+  duration      String           // e.g. "3 Months", "6 Months"
+  stipend       Float?
+
+  
+  applicationDeadline DateTime
+  status        InternshipStatus @default(OPEN)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  applications  InternshipApplication[]
+}
+
+
+model InternshipApplication {
+  id            Int       @id @default(autoincrement())
+  internshipId  Int
+  studentId     Int
+  status        ApplicationStatus @default(PENDING)
+  appliedAt     DateTime  @default(now())
+
+  internship    Internship @relation(fields: [internshipId], references: [id], onDelete: Cascade)
+  student       Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+
+
 
 enum Role {
   UNIVERSITY
@@ -82,4 +145,35 @@ enum Role {
   DEPARTMENT
   ADVISOR
   STUDENT
+}
+
+
+model Message {
+  id          String   @id @default(uuid())
+  senderId    Int
+  receiverId  Int
+
+  // Message content
+  messageType MessageType @default(TEXT)
+  text        String?      // nullable for file-only messages
+
+  // File support
+  fileUrl     String?      // stored file URL (S3, Cloudinary, local, etc.)
+  fileName    String?
+  fileType    String?      // pdf, image/png, video/mp4, etc.
+  fileSize    Int?         // in bytes
+
+  isRead      Boolean  @default(false)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  sender    User      @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver  User      @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+}
+
+enum MessageType {
+  TEXT
+  FILE
+  TEXT_AND_FILE
 }

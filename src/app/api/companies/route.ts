@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { handleCreateCompany } from "@/controllers/companyController";
+import {
+  handleCreateCompany,
+  handleGetAllCompanies,
+} from "@/controllers/companyController";
+
+export async function GET() {
+  const result = await handleGetAllCompanies();
+  return NextResponse.json(result.body, { status: result.status });
+}
 
 export async function POST(request: NextRequest) {
   let body: unknown;

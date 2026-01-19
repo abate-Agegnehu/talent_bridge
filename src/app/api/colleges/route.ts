@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { handleCreateCollege } from "@/controllers/institutionController";
+import {
+  handleCreateCollege,
+  handleGetAllColleges,
+} from "@/controllers/institutionController";
+
+export async function GET() {
+  const result = await handleGetAllColleges();
+  return NextResponse.json(result.body, { status: result.status });
+}
 
 export async function POST(request: NextRequest) {
   let body: unknown;
