@@ -52,12 +52,21 @@ model Department {
   students  Student[]
 }
 
+enum AdvisorStatus {
+  PENDING    
+  APPROVED   
+  REJECTED   
+}
+
+
 model Advisor {
   id           Int        @id @default(autoincrement())
   departmentId Int
   userId       Int
+  status        AdvisorStatus  @default(PENDING)
   department   Department @relation(fields: [departmentId], references: [id])
   user         User       @relation(fields: [userId], references: [id])
+  assignments  AdvisorAssignment[]
 }
 
 model Student {
@@ -70,6 +79,7 @@ model Student {
   department   Department? @relation(fields: [departmentId], references: [id])
   user         User        @relation(fields: [userId], references: [id])
   applications InternshipApplication[]
+  advisors     AdvisorAssignment[]
 }
 
 model Company {
@@ -128,6 +138,9 @@ model InternshipApplication {
   id            Int       @id @default(autoincrement())
   internshipId  Int
   studentId     Int
+  coverLetter   String
+  resumeUrl     String?
+  portfolioUrl  String?
   status        ApplicationStatus @default(PENDING)
   appliedAt     DateTime  @default(now())
 
@@ -176,4 +189,23 @@ enum MessageType {
   TEXT
   FILE
   TEXT_AND_FILE
+}
+
+enum AdvisorAssignmentStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+model AdvisorAssignment {
+  id         Int      @id @default(autoincrement())
+  advisorId  Int
+  studentId  Int
+  status     AdvisorAssignmentStatus @default(ACTIVE)
+  assignedAt DateTime @default(now())
+
+  advisor    Advisor  @relation(fields: [advisorId], references: [id], onDelete: Cascade)
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([advisorId, studentId]) // prevent duplicate assignment
 }

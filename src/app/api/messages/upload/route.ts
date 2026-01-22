@@ -4,8 +4,25 @@ import { existsSync } from "fs";
 import { join } from "path";
 import { randomUUID } from "crypto";
 
+// Disable body parsing to handle multipart/form-data properly
+export const runtime = "nodejs";
+
 export async function POST(request: NextRequest) {
   try {
+    // Check Content-Type header
+    const contentType = request.headers.get("content-type") || "";
+    
+    if (!contentType.includes("multipart/form-data")) {
+      return NextResponse.json(
+        {
+          message: "Invalid Content-Type. Expected 'multipart/form-data'.",
+          hint: "In Postman, select 'Body' tab, then 'form-data', and add a key named 'file' with type 'File'.",
+          receivedContentType: contentType || "not provided",
+        },
+        { status: 400 },
+      );
+    }
+
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
 

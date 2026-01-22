@@ -1,6 +1,7 @@
 import {
   AdvisorPayload,
   AdvisorUpdatePayload,
+  AdvisorAssignmentPayload,
   CollegePayload,
   createAdvisor,
   createCollege,
@@ -13,10 +14,15 @@ import {
   getAllDepartments,
   getAllUniversities,
   getAdvisorById,
+  getApprovedAdvisorsByDepartmentId,
+  getAdvisorsByCollegeAndDepartmentId,
   getAdvisorsByDepartmentId,
+  getAdvisorsByStudentId,
+  getStudentsByAdvisorId,
   getCollegeById,
   getDepartmentById,
   getUniversityById,
+  assignAdvisorToStudent,
   updateAdvisor,
   UniversityPayload,
 } from "@/services/institutionService";
@@ -399,6 +405,68 @@ export async function handleGetAdvisorsByDepartmentId(
   }
 }
 
+export async function handleGetApprovedAdvisorsByDepartmentId(
+  departmentId: number,
+): Promise<ControllerResult<unknown>> {
+  try {
+    const advisors = await getApprovedAdvisorsByDepartmentId(departmentId);
+    return { status: 200, body: advisors };
+  } catch (error) {
+    console.error(
+      "Error fetching approved advisors by department:",
+      error,
+    );
+
+    const errorMessage = (error as Error).message;
+    if (errorMessage?.includes("does not exist")) {
+      return {
+        status: 404,
+        body: { message: errorMessage },
+      };
+    }
+
+    return {
+      status: 500,
+      body: { message: "Failed to fetch advisors" },
+    };
+  }
+}
+
+export async function handleGetAdvisorsByCollegeAndDepartmentId(
+  collegeId: number,
+  departmentId: number,
+): Promise<ControllerResult<unknown>> {
+  try {
+    const advisors = await getAdvisorsByCollegeAndDepartmentId(
+      collegeId,
+      departmentId,
+    );
+    return { status: 200, body: advisors };
+  } catch (error) {
+    console.error("Error fetching advisors by college and department:", error);
+
+    const errorMessage = (error as Error).message;
+    if (errorMessage?.includes("does not belong to College")) {
+      return {
+        status: 400,
+        body: { message: errorMessage },
+      };
+    }
+
+    if (errorMessage?.includes("does not exist")) {
+      return {
+        status: 404,
+        body: { message: errorMessage },
+      };
+    }
+
+    return {
+      status: 500,
+      body: { message: "Failed to fetch advisors" },
+    };
+  }
+}
+
 export async function handleGetAdvisorById(
   id: number,
 ): Promise<ControllerResult<unknown>> {
@@ -474,7 +542,7 @@ function validateAdvisorUpdatePayload(payload: unknown): ValidationResult {
   }
 
   const value = payload as Record<string, unknown>;
-  const allowedKeys = ["name", "email", "password", "departmentId"];
+  const allowedKeys = ["name", "email", "password", "departmentId", "status"];
 
   const keys = Object.keys(value);
 
@@ -516,6 +584,46 @@ function validateAdvisorUpdatePayload(payload: unknown): ValidationResult {
     (typeof value.password !== "string" || value.password.trim().length === 0)
   ) {
     return { valid: false, message: "Password must be a non-empty string" };
+  }
+
+  if (
+    value.status !== undefined &&
+    (typeof value.status !== "string" ||
+      !["PENDING", "APPROVED", "REJECTED"].includes(value.status))
+  ) {
+    return {
+      valid: false,
+      message: "status must be one of PENDING, APPROVED, REJECTED",
+    };
+  }
+
+  return { valid: true };
+}
+
+function validateAdvisorAssignmentPayload(payload: unknown): ValidationResult {
+  if (typeof payload !== "object" || payload === null) {
+    return { valid: false, message: "Request body must be an object" };
+  }
+
+  const value = payload as Record<string, unknown>;
+
+  if (
+    typeof value.studentId !== "number" ||
+    !Number.isInteger(value.studentId) ||
+    value.studentId <= 0
+  ) {
+    return { valid: false, message: "studentId must be a positive integer" };
+  }
+
+  if (
+    value.status !== undefined &&
+    (typeof value.status !== "string" ||
+      !["ACTIVE", "COMPLETED", "CANCELLED"].includes(value.status))
+  ) {
+    return {
+      valid: false,
+      message: "status must be one of ACTIVE, COMPLETED, CANCELLED",
+    };
   }
 
   return { valid: true };
@@ -595,6 +703,99 @@ export async function handleDeleteAdvisor(
     return {
       status: 500,
       body: { message: "Failed to delete advisor" },
+    };
+  }
+}
+
+export async function handleAssignAdvisorToStudent(
+  advisorId: number,
+  payload: unknown,
+): Promise<ControllerResult<unknown>> {
+  const validation = validateAdvisorAssignmentPayload(payload);
+
+  if (!validation.valid) {
+    return {
+      status: 400,
+      body: { message: validation.message ?? "Invalid request body" },
+    };
+  }
+
+  try {
+    const result = await assignAdvisorToStudent(
+      advisorId,
+      payload as AdvisorAssignmentPayload,
+    );
+    return { status: 201, body: result };
+  } catch (error) {
+    console.error("Error assigning advisor to student:", error);
+
+    const message = (error as Error).message;
+    if (message === "Advisor not found" || message === "Student not found") {
+      return { status: 404, body: { message } };
+    }
+    if (message === "Advisor is not approved") {
+      return { status: 400, body: { message } };
+    }
+    if (message === "Student is not linked to a department") {
+      return { status: 400, body: { message } };
+    }
+    if (message.includes("same department")) {
+      return { status: 400, body: { message } };
+    }
+
+    if ((error as { code?: string }).code === "P2002") {
+      // duplicate assignment
+      return {
+        status: 409,
+        body: { message: "Advisor already assigned to this student" },
+      };
+    }
+
+    return {
+      status: 500,
+      body: { message: "Failed to assign advisor to student" },
+    };
+  }
+}
+
+export async function handleGetStudentsByAdvisorId(
+  advisorId: number,
+): Promise<ControllerResult<unknown>> {
+  try {
+    const students = await getStudentsByAdvisorId(advisorId);
+    return { status: 200, body: students };
+  } catch (error) {
+    console.error("Error fetching students by advisor:", error);
+
+    const message = (error as Error).message;
+    if (message === "Advisor not found") {
+      return { status: 404, body: { message } };
+    }
+
+    return {
+      status: 500,
+      body: { message: "Failed to fetch students" },
+    };
+  }
+}
+
+export async function handleGetAdvisorsByStudentId(
+  studentId: number,
+): Promise<ControllerResult<unknown>> {
+  try {
+    const advisors = await getAdvisorsByStudentId(studentId);
+    return { status: 200, body: advisors };
+  } catch (error) {
+    console.error("Error fetching advisors by student:", error);
+
+    const message = (error as Error).message;
+    if (message === "Student not found") {
+      return { status: 404, body: { message } };
+    }
+
+    return {
+      status: 500,
+      body: { message: "Failed to fetch advisors" },
     };
   }
 }

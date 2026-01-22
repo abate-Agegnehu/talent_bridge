@@ -1,5 +1,9 @@
 import prisma from "@/lib/prisma";
-import { InternshipStatus, InternshipType } from "@/generated/prisma/enums";
+import {
+  InternshipStatus,
+  InternshipType,
+  ApplicationStatus,
+} from "@/generated/prisma/enums";
 
 export type InternshipPayload = {
   companyId: number;
@@ -17,6 +21,9 @@ export type InternshipPayload = {
 export type InternshipApplicationPayload = {
   internshipId: number;
   studentId: number;
+  coverLetter: string;
+  resumeUrl?: string | null;
+  portfolioUrl?: string | null;
 };
 
 export async function getAllInternships() {
@@ -194,6 +201,9 @@ export async function createInternshipApplication(
         data: {
           internshipId: payload.internshipId,
           studentId: payload.studentId,
+          coverLetter: payload.coverLetter,
+          resumeUrl: payload.resumeUrl,
+          portfolioUrl: payload.portfolioUrl,
         },
         include: {
           internship: {
@@ -336,4 +346,162 @@ export async function getInternshipApplicationsByCompanyId(companyId: number) {
       appliedAt: "desc",
     },
   });
+}
+
+export async function getInternshipApplicationsByCompanyIdAndInternshipId(
+  companyId: number,
+  internshipId: number,
+) {
+  // Verify Company exists
+  const company = await prisma.company.findUnique({
+    where: { id: companyId },
+    select: { id: true },
+  });
+
+  if (!company) {
+    throw new Error(`Company with id ${companyId} does not exist`);
+  }
+
+  // Verify Internship exists and belongs to the company
+  const internship = await prisma.internship.findUnique({
+    where: { id: internshipId },
+    select: { id: true, companyId: true },
+  });
+
+  if (!internship) {
+    throw new Error(`Internship with id ${internshipId} does not exist`);
+  }
+
+  if (internship.companyId !== companyId) {
+    throw new Error(
+      `Internship with id ${internshipId} does not belong to Company with id ${companyId}`,
+    );
+  }
+
+  return prisma.internshipApplication.findMany({
+    where: {
+      internshipId: internshipId,
+      internship: {
+        companyId: companyId,
+      },
+    },
+    include: {
+      internship: {
+        include: {
+          company: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  role: true,
+                },
+              },
+            },
+          },
+        },
+      },
+      student: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      appliedAt: "desc",
+    },
+  });
+}
+
+export async function updateInternshipApplicationStatus(
+  studentId: number,
+  internshipId: number,
+  status: ApplicationStatus,
+) {
+  return prisma.$transaction(
+    async (tx) => {
+      // Verify Student exists
+      const student = await tx.student.findUnique({
+        where: { id: studentId },
+        select: { id: true },
+      });
+
+      if (!student) {
+        throw new Error(`Student with id ${studentId} does not exist`);
+      }
+
+      // Verify Internship exists
+      const internship = await tx.internship.findUnique({
+        where: { id: internshipId },
+        select: { id: true },
+      });
+
+      if (!internship) {
+        throw new Error(`Internship with id ${internshipId} does not exist`);
+      }
+
+      // Verify Application exists
+      const application = await tx.internshipApplication.findFirst({
+        where: {
+          studentId: studentId,
+          internshipId: internshipId,
+        },
+        select: { id: true },
+      });
+
+      if (!application) {
+        throw new Error(
+          `Internship application for student ${studentId} and internship ${internshipId} does not exist`,
+        );
+      }
+
+      // Update application status
+      return tx.internshipApplication.update({
+        where: { id: application.id },
+        data: { status: status },
+        include: {
+          internship: {
+            include: {
+              company: {
+                include: {
+                  user: {
+                    select: {
+                      id: true,
+                      name: true,
+                      email: true,
+                      role: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          student: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  role: true,
+                },
+              },
+            },
+          },
+        },
+      });
+    },
+    {
+      maxWait: 10000,
+      timeout: 20000,
+    },
+  );
 }

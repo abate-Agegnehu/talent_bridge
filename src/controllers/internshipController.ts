@@ -2,13 +2,15 @@ import {
   createInternship,
   createInternshipApplication,
   getAllInternships,
+  getInternshipApplicationsByCompanyIdAndInternshipId,
   getInternshipApplicationsByCompanyId,
   getInternshipApplicationsByStudentId,
   getInternshipsByCompanyId,
+  updateInternshipApplicationStatus,
   InternshipApplicationPayload,
   InternshipPayload,
 } from "@/services/internshipService";
-import { InternshipType } from "@/generated/prisma/enums";
+import { InternshipType, ApplicationStatus } from "@/generated/prisma/enums";
 
 type ControllerResult<T> = {
   status: number;
@@ -97,6 +99,9 @@ function validateInternshipApplicationPayload(
   const value = payload as Record<string, unknown>;
   const internshipId = value.internshipId;
   const studentId = value.studentId;
+  const coverLetter = value.coverLetter;
+  const resumeUrl = value.resumeUrl;
+  const portfolioUrl = value.portfolioUrl;
 
   if (
     typeof internshipId !== "number" ||
@@ -115,6 +120,18 @@ function validateInternshipApplicationPayload(
     studentId <= 0
   ) {
     return { valid: false, message: "studentId must be a positive integer" };
+  }
+
+  if (typeof coverLetter !== "string" || coverLetter.trim().length === 0) {
+    return { valid: false, message: "Cover letter is required" };
+  }
+
+  if (resumeUrl !== undefined && resumeUrl !== null && typeof resumeUrl !== "string") {
+    return { valid: false, message: "resumeUrl must be a string" };
+  }
+
+  if (portfolioUrl !== undefined && portfolioUrl !== null && typeof portfolioUrl !== "string") {
+    return { valid: false, message: "portfolioUrl must be a string" };
   }
 
   return { valid: true };
@@ -274,6 +291,102 @@ export async function handleGetInternshipApplicationsByCompanyId(
     return {
       status: 500,
       body: { message: "Failed to fetch internship applications" },
+    };
+  }
+}
+
+export async function handleGetInternshipApplicationsByCompanyIdAndInternshipId(
+  companyId: number,
+  internshipId: number,
+): Promise<ControllerResult<unknown>> {
+  try {
+    const applications = await getInternshipApplicationsByCompanyIdAndInternshipId(
+      companyId,
+      internshipId,
+    );
+    return { status: 200, body: applications };
+  } catch (error) {
+    console.error("Error fetching internship applications:", error);
+
+    const errorMessage = (error as Error).message;
+    if (
+      errorMessage?.includes("does not exist") ||
+      errorMessage?.includes("does not belong")
+    ) {
+      return {
+        status: 404,
+        body: { message: errorMessage },
+      };
+    }
+
+    return {
+      status: 500,
+      body: { message: "Failed to fetch internship applications" },
+    };
+  }
+}
+
+function validateApplicationStatusUpdatePayload(
+  payload: unknown,
+): ValidationResult {
+  if (typeof payload !== "object" || payload === null) {
+    return { valid: false, message: "Request body must be an object" };
+  }
+
+  const value = payload as Record<string, unknown>;
+  const status = value.status;
+
+  if (
+    !status ||
+    !Object.values(ApplicationStatus).includes(status as ApplicationStatus)
+  ) {
+    return {
+      valid: false,
+      message: `Status must be one of: ${Object.values(ApplicationStatus).join(", ")}`,
+    };
+  }
+
+  return { valid: true };
+}
+
+export async function handleUpdateInternshipApplicationStatus(
+  studentId: number,
+  internshipId: number,
+  payload: unknown,
+): Promise<ControllerResult<unknown>> {
+  const validation = validateApplicationStatusUpdatePayload(payload);
+
+  if (!validation.valid) {
+    return {
+      status: 400,
+      body: { message: validation.message ?? "Invalid request body" },
+    };
+  }
+
+  try {
+    const value = payload as Record<string, unknown>;
+    const status = value.status as ApplicationStatus;
+
+    const application = await updateInternshipApplicationStatus(
+      studentId,
+      internshipId,
+      status,
+    );
+    return { status: 200, body: application };
+  } catch (error) {
+    console.error("Error updating internship application status:", error);
+
+    const errorMessage = (error as Error).message;
+    if (errorMessage?.includes("does not exist")) {
+      return {
+        status: 404,
+        body: { message: errorMessage },
+      };
+    }
+
+    return {
+      status: 500,
+      body: { message: "Failed to update internship application status" },
     };
   }
 }

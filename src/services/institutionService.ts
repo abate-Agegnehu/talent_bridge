@@ -1,6 +1,10 @@
 import prisma from "@/lib/prisma";
 import { hashPassword } from "@/lib/password";
-import { Role } from "@/generated/prisma/enums";
+import {
+  AdvisorAssignmentStatus,
+  AdvisorStatus,
+  Role,
+} from "@/generated/prisma/enums";
 
 export type UniversityPayload = {
   name: string;
@@ -31,6 +35,12 @@ export type AdvisorPayload = {
 
 export type AdvisorUpdatePayload = Partial<Omit<AdvisorPayload, "departmentId">> & {
   departmentId?: number;
+  status?: AdvisorStatus;
+};
+
+export type AdvisorAssignmentPayload = {
+  studentId: number;
+  status?: AdvisorAssignmentStatus;
 };
 
 export async function getAllUniversities() {
@@ -746,6 +756,317 @@ export async function getAdvisorsByDepartmentId(departmentId: number) {
   }
 }
 
+export async function getApprovedAdvisorsByDepartmentId(departmentId: number) {
+  try {
+    // Verify Department exists
+    const department = await prisma.department.findUnique({
+      where: { id: departmentId },
+      select: { id: true },
+    });
+
+    if (!department) {
+      throw new Error(`Department with id ${departmentId} does not exist`);
+    }
+
+    // Use raw query to filter out advisors with NULL userId and filter by department + APPROVED status
+    const advisorIds = await prisma.$queryRaw<Array<{ id: number }>>`
+      SELECT id 
+      FROM "Advisor"
+      WHERE "userId" IS NOT NULL 
+        AND "departmentId" = ${departmentId}
+        AND "status" = 'APPROVED'
+      ORDER BY id ASC
+    `;
+
+    if (advisorIds.length === 0) {
+      return [];
+    }
+
+    const ids = advisorIds.map((a) => a.id);
+
+    try {
+      return await prisma.advisor.findMany({
+        where: {
+          id: { in: ids },
+        },
+        include: {
+          department: {
+            include: {
+              college: {
+                include: {
+                  university: {
+                    include: {
+                      user: {
+                        select: {
+                          id: true,
+                          name: true,
+                          email: true,
+                          role: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+            },
+          },
+        },
+        orderBy: {
+          id: "asc",
+        },
+      });
+    } catch (error) {
+      // If Prisma fails to load relations due to NULL userId, return empty array
+      if ((error as { code?: string }).code === "P2032") {
+        return [];
+      }
+      throw error;
+    }
+  } catch (error) {
+    // Handle any other errors
+    if ((error as { code?: string }).code === "P2032") {
+      return [];
+    }
+    throw error;
+  }
+}
+
+export async function assignAdvisorToStudent(
+  advisorId: number,
+  payload: AdvisorAssignmentPayload,
+) {
+  return prisma.$transaction(
+    async (tx) => {
+      const advisor = await tx.advisor.findUnique({
+        where: { id: advisorId },
+        select: { departmentId: true, status: true },
+      });
+
+      if (!advisor) {
+        throw new Error("Advisor not found");
+      }
+
+      if (advisor.status !== AdvisorStatus.APPROVED) {
+        throw new Error("Advisor is not approved");
+      }
+
+      const student = await tx.student.findUnique({
+        where: { id: payload.studentId },
+        select: { departmentId: true },
+      });
+
+      if (!student) {
+        throw new Error("Student not found");
+      }
+
+      if (!student.departmentId) {
+        throw new Error("Student is not linked to a department");
+      }
+
+      if (student.departmentId !== advisor.departmentId) {
+        throw new Error(
+          "Student and advisor must belong to the same department",
+        );
+      }
+
+      return tx.advisorAssignment.create({
+        data: {
+          advisorId,
+          studentId: payload.studentId,
+          status: payload.status ?? AdvisorAssignmentStatus.ACTIVE,
+        },
+        include: {
+          advisor: {
+            include: {
+              user: { select: { id: true, name: true, email: true, role: true } },
+            },
+          },
+          student: {
+            include: {
+              user: { select: { id: true, name: true, email: true, role: true } },
+              department: true,
+            },
+          },
+        },
+      });
+    },
+    { maxWait: 10000, timeout: 20000 },
+  );
+}
+
+export async function getStudentsByAdvisorId(advisorId: number) {
+  // ensure advisor exists
+  const advisor = await prisma.advisor.findUnique({
+    where: { id: advisorId },
+    select: { id: true },
+  });
+
+  if (!advisor) {
+    throw new Error("Advisor not found");
+  }
+
+  return prisma.advisorAssignment.findMany({
+    where: { advisorId },
+    include: {
+      student: {
+        include: {
+          user: {
+            select: { id: true, name: true, email: true, role: true },
+          },
+          department: true,
+        },
+      },
+    },
+    orderBy: { assignedAt: "desc" },
+  });
+}
+
+export async function getAdvisorsByStudentId(studentId: number) {
+  // ensure student exists
+  const student = await prisma.student.findUnique({
+    where: { id: studentId },
+    select: { id: true },
+  });
+
+  if (!student) {
+    throw new Error("Student not found");
+  }
+
+  return prisma.advisorAssignment.findMany({
+    where: {
+      studentId,
+      status: AdvisorAssignmentStatus.ACTIVE,
+    },
+    include: {
+      advisor: {
+        include: {
+          user: {
+            select: { id: true, name: true, email: true, role: true },
+          },
+          department: {
+            include: {
+              college: {
+                include: {
+                  university: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    orderBy: { assignedAt: "desc" },
+  });
+}
+
+export async function getAdvisorsByCollegeAndDepartmentId(
+  collegeId: number,
+  departmentId: number,
+) {
+  try {
+    // Verify Department exists and belongs to the given College
+    const department = await prisma.department.findFirst({
+      where: {
+        id: departmentId,
+        collegeId,
+      },
+      select: { id: true },
+    });
+
+    if (!department) {
+      throw new Error(
+        `Department with id ${departmentId} does not belong to College with id ${collegeId} or does not exist`,
+      );
+    }
+
+    // Use raw query to filter out advisors with NULL userId and match by department/college
+    const advisorIds = await prisma.$queryRaw<Array<{ id: number }>>`
+      SELECT a.id
+      FROM "Advisor" a
+      JOIN "Department" d ON a."departmentId" = d.id
+      WHERE a."userId" IS NOT NULL
+        AND d."collegeId" = ${collegeId}
+        AND d.id = ${departmentId}
+      ORDER BY a.id ASC
+    `;
+
+    if (advisorIds.length === 0) {
+      return [];
+    }
+
+    const ids = advisorIds.map((a) => a.id);
+
+    try {
+      return await prisma.advisor.findMany({
+        where: {
+          id: { in: ids },
+        },
+        include: {
+          department: {
+            include: {
+              college: {
+                include: {
+                  university: {
+                    include: {
+                      user: {
+                        select: {
+                          id: true,
+                          name: true,
+                          email: true,
+                          role: true,
+                        },
+                      },
+                    },
+                  },
+                  user: {
+                    select: {
+                      id: true,
+                      name: true,
+                      email: true,
+                      role: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+            },
+          },
+        },
+        orderBy: {
+          id: "asc",
+        },
+      });
+    } catch (error) {
+      // If Prisma fails to load relations due to NULL userId, return empty array
+      if ((error as { code?: string }).code === "P2032") {
+        return [];
+      }
+      throw error;
+    }
+  } catch (error) {
+    // Handle any other errors
+    if ((error as { code?: string }).code === "P2032") {
+      return [];
+    }
+    throw error;
+  }
+}
+
 export async function getAdvisorById(id: number) {
   try {
     // First check if advisor exists and has userId using raw query
@@ -887,11 +1208,12 @@ export async function updateAdvisor(id: number, payload: AdvisorUpdatePayload) {
       });
     }
 
-    // Update Advisor fields
+    // Update Advisor fields (departmentId, status)
     return tx.advisor.update({
       where: { id },
       data: {
         ...(payload.departmentId !== undefined && { departmentId: payload.departmentId }),
+        ...(payload.status !== undefined && { status: payload.status }),
       },
     });
   },
