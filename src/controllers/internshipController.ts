@@ -99,9 +99,6 @@ function validateInternshipApplicationPayload(
   const value = payload as Record<string, unknown>;
   const internshipId = value.internshipId;
   const studentId = value.studentId;
-  const coverLetter = value.coverLetter;
-  const resumeUrl = value.resumeUrl;
-  const portfolioUrl = value.portfolioUrl;
 
   if (
     typeof internshipId !== "number" ||
@@ -120,18 +117,6 @@ function validateInternshipApplicationPayload(
     studentId <= 0
   ) {
     return { valid: false, message: "studentId must be a positive integer" };
-  }
-
-  if (typeof coverLetter !== "string" || coverLetter.trim().length === 0) {
-    return { valid: false, message: "Cover letter is required" };
-  }
-
-  if (resumeUrl !== undefined && resumeUrl !== null && typeof resumeUrl !== "string") {
-    return { valid: false, message: "resumeUrl must be a string" };
-  }
-
-  if (portfolioUrl !== undefined && portfolioUrl !== null && typeof portfolioUrl !== "string") {
-    return { valid: false, message: "portfolioUrl must be a string" };
   }
 
   return { valid: true };

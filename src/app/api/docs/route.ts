@@ -1390,9 +1390,6 @@ const openApiDocument = {
               example: {
                 internshipId: 1,
                 studentId: 1,
-                coverLetter: "I am excited to apply...",
-                resumeUrl: "https://example.com/resume.pdf",
-                portfolioUrl: "https://github.com/student",
               },
             },
           },
@@ -2515,17 +2512,6 @@ const openApiDocument = {
           studentId: {
             type: "integer",
           },
-          coverLetter: {
-            type: "string",
-          },
-          resumeUrl: {
-            type: "string",
-            nullable: true,
-          },
-          portfolioUrl: {
-            type: "string",
-            nullable: true,
-          },
           status: {
             type: "string",
             enum: ["PENDING", "ACCEPTED", "REJECTED"],
@@ -2538,24 +2524,13 @@ const openApiDocument = {
       },
       InternshipApplicationCreateInput: {
         type: "object",
-        required: ["internshipId", "studentId", "coverLetter"],
+        required: ["internshipId", "studentId"],
         properties: {
           internshipId: {
             type: "integer",
           },
           studentId: {
             type: "integer",
-          },
-          coverLetter: {
-            type: "string",
-          },
-          resumeUrl: {
-            type: "string",
-            nullable: true,
-          },
-          portfolioUrl: {
-            type: "string",
-            nullable: true,
           },
         },
       },

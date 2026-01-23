@@ -3,6 +3,7 @@ import {
   AdvisorUpdatePayload,
   AdvisorAssignmentPayload,
   CollegePayload,
+  AdminPayload,
   createAdvisor,
   createCollege,
   createDepartment,
@@ -25,7 +26,10 @@ import {
   assignAdvisorToStudent,
   updateAdvisor,
   UniversityPayload,
+  createAdmin,
+  updateUniversityStatus,
 } from "@/services/institutionService";
+import { RegistrationStatus } from "@/generated/prisma/enums";
 
 type ControllerResult<T> = {
   status: number;
@@ -195,6 +199,86 @@ export async function handleCreateUniversity(
     return {
       status: 500,
       body: { message: "Failed to create university" },
+    };
+  }
+}
+
+export async function handleUpdateUniversityStatus(
+  id: number,
+  payload: unknown,
+): Promise<ControllerResult<unknown>> {
+  if (typeof payload !== "object" || payload === null) {
+    return { status: 400, body: { message: "Request body must be an object" } };
+  }
+
+  const value = payload as Record<string, unknown>;
+  const status = value.status;
+
+  if (
+    typeof status !== "string" ||
+    !["PENDING", "ACCEPTED", "REJECTED"].includes(status)
+  ) {
+    return {
+      status: 400,
+      body: { message: "status must be one of PENDING, ACCEPTED, REJECTED" },
+    };
+  }
+
+  try {
+    const updated = await updateUniversityStatus(
+      id,
+      status as RegistrationStatus,
+    );
+    return { status: 200, body: updated };
+  } catch (error) {
+    console.error("Error updating university status:", error);
+    
+    if ((error as { code?: string }).code === "P2025") {
+      return {
+        status: 404,
+        body: { message: "University not found" },
+      };
+    }
+
+    return {
+      status: 500,
+      body: { message: "Failed to update university status" },
+    };
+  }
+}
+
+export async function handleCreateAdmin(
+  payload: unknown,
+): Promise<ControllerResult<unknown>> {
+  const validation = validateNameOnlyPayload(payload);
+
+  if (!validation.valid) {
+    return {
+      status: 400,
+      body: { message: validation.message ?? "Invalid request body" },
+    };
+  }
+
+  try {
+    const admin = await createAdmin(payload as AdminPayload);
+    return { status: 201, body: admin };
+  } catch (error) {
+    if ((error as { code?: string; meta?: { target?: string[] } }).code === "P2002") {
+      const target = (error as { meta?: { target?: string[] } }).meta?.target;
+      if (Array.isArray(target) && target.includes("email")) {
+        return {
+          status: 409,
+          body: { message: "Email already exists" },
+        };
+      }
+      return {
+        status: 409,
+        body: { message: "Unique constraint violation" },
+      };
+    }
+    return {
+      status: 500,
+      body: { message: "Failed to create admin" },
     };
   }
 }

@@ -6,7 +6,9 @@ import {
   getAllCompanies,
   getCompanyById,
   updateCompany,
+  updateCompanyStatus,
 } from "@/services/companyService";
+import { RegistrationStatus } from "@/generated/prisma/enums";
 
 type ControllerResult<T> = {
   status: number;
@@ -239,6 +241,50 @@ export async function handleDeleteCompany(
     return {
       status: 500,
       body: { message: "Failed to delete company" },
+    };
+  }
+}
+
+export async function handleUpdateCompanyStatus(
+  id: number,
+  payload: unknown,
+): Promise<ControllerResult<unknown>> {
+  if (typeof payload !== "object" || payload === null) {
+    return { status: 400, body: { message: "Request body must be an object" } };
+  }
+
+  const value = payload as Record<string, unknown>;
+  const status = value.status;
+
+  if (
+    typeof status !== "string" ||
+    !["PENDING", "ACCEPTED", "REJECTED"].includes(status)
+  ) {
+    return {
+      status: 400,
+      body: { message: "status must be one of PENDING, ACCEPTED, REJECTED" },
+    };
+  }
+
+  try {
+    const updated = await updateCompanyStatus(
+      id,
+      status as RegistrationStatus,
+    );
+    return { status: 200, body: updated };
+  } catch (error) {
+    console.error("Error updating company status:", error);
+    
+    if ((error as { code?: string }).code === "P2025") {
+      return {
+        status: 404,
+        body: { message: "Company not found" },
+      };
+    }
+
+    return {
+      status: 500,
+      body: { message: "Failed to update company status" },
     };
   }
 }

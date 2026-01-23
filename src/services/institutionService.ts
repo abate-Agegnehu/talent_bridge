@@ -3,10 +3,17 @@ import { hashPassword } from "@/lib/password";
 import {
   AdvisorAssignmentStatus,
   AdvisorStatus,
+  RegistrationStatus,
   Role,
 } from "@/generated/prisma/enums";
 
 export type UniversityPayload = {
+  name: string;
+  email: string;
+  password: string;
+};
+
+export type AdminPayload = {
   name: string;
   email: string;
   password: string;
@@ -206,6 +213,38 @@ export async function createUniversity(payload: UniversityPayload) {
     },
   );
 }
+
+export async function createAdmin(payload: AdminPayload) {
+  // Use transaction to ensure atomicity with timeout
+  return prisma.$transaction(
+    async (tx) => {
+      // Hash password before creating User
+      const hashedPassword = await hashPassword(payload.password);
+      
+      // Create User first
+      const user = await tx.user.create({
+        data: {
+          name: payload.name,
+          email: payload.email,
+          password: hashedPassword,
+          role: Role.ADMIN,
+        },
+      });
+
+      // Create Admin with userId (name comes from User)
+      return tx.admin.create({
+        data: {
+          userId: user.id,
+        },
+      });
+    },
+    {
+      maxWait: 10000,
+      timeout: 20000,
+    },
+  );
+}
+
 
 export async function getAllColleges() {
   try {
@@ -1253,4 +1292,21 @@ export async function deleteAdvisor(id: number) {
       timeout: 20000,
     },
   );
+}
+
+export async function updateUniversityStatus(id: number, status: RegistrationStatus) {
+  return prisma.university.update({
+    where: { id },
+    data: { status },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+    },
+  });
 }

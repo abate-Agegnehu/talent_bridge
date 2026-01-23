@@ -22,13 +22,27 @@ model User {
   departments  Department[]
   students     Student[]
   universities University[]
+  admin     Admin[]
   sentMessages     Message[] @relation("SentMessages")
   receivedMessages Message[] @relation("ReceivedMessages")
+}
+
+model Admin {
+  id       Int       @id @default(autoincrement())
+  userId   Int
+  user     User      @relation(fields: [userId], references: [id])
+}
+
+enum RegistrationStatus{
+  PENDING
+  ACCEPTED
+  REJECTED
 }
 
 model University {
   id       Int       @id @default(autoincrement())
   userId   Int
+  status  RegistrationStatus  @default(PENDING)
   colleges College[]
   user     User      @relation(fields: [userId], references: [id])
 }
@@ -37,6 +51,7 @@ model College {
   id           Int          @id @default(autoincrement())
   universityId Int
   userId       Int
+  status  RegistrationStatus  @default(PENDING)
   university   University   @relation(fields: [universityId], references: [id])
   user         User         @relation(fields: [userId], references: [id])
   departments  Department[]
@@ -50,6 +65,7 @@ model Department {
   college   College   @relation(fields: [collegeId], references: [id])
   user      User      @relation(fields: [userId], references: [id])
   students  Student[]
+  internshipAcceptances InternshipAcceptance[]
 }
 
 enum AdvisorStatus {
@@ -80,13 +96,16 @@ model Student {
   user         User        @relation(fields: [userId], references: [id])
   applications InternshipApplication[]
   advisors     AdvisorAssignment[]
+  internshipAcceptances InternshipAcceptance[]
 }
 
 model Company {
   id        Int      @id @default(autoincrement())
   userId    Int
+  status    RegistrationStatus @default(PENDING)
   user      User     @relation(fields: [userId], references: [id])
   internships Internship[]
+  internshipAcceptances InternshipAcceptance[]
 }
 
 enum InternshipType {
@@ -131,6 +150,7 @@ model Internship {
   updatedAt     DateTime @updatedAt
 
   applications  InternshipApplication[]
+  internshipAcceptances InternshipAcceptance[]
 }
 
 
@@ -158,6 +178,7 @@ enum Role {
   DEPARTMENT
   ADVISOR
   STUDENT
+  ADMIN
 }
 
 
@@ -208,4 +229,24 @@ model AdvisorAssignment {
   student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([advisorId, studentId]) // prevent duplicate assignment
+}
+
+
+model InternshipAcceptance {
+  id            Int      @id @default(autoincrement())
+  letter     String
+
+  internshipId  Int
+  companyId     Int
+  studentId     Int
+  departmentId  Int?
+
+  internship    Internship @relation(fields: [internshipId], references: [id], onDelete: Cascade)
+  company       Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  student       Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  department    Department? @relation(fields: [departmentId], references: [id])
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  @@unique([internshipId, studentId]) // one acceptance per internship per student
 }

@@ -159,3 +159,20 @@ export async function deleteCompany(id: number) {
     },
   );
 }
+
+export async function updateCompanyStatus(id: number, status: RegistrationStatus) {
+  return prisma.company.update({
+    where: { id },
+    data: { status },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+    },
+  });
+}

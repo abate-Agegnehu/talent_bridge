@@ -21,9 +21,6 @@ export type InternshipPayload = {
 export type InternshipApplicationPayload = {
   internshipId: number;
   studentId: number;
-  coverLetter: string;
-  resumeUrl?: string | null;
-  portfolioUrl?: string | null;
 };
 
 export async function getAllInternships() {
@@ -201,9 +198,6 @@ export async function createInternshipApplication(
         data: {
           internshipId: payload.internshipId,
           studentId: payload.studentId,
-          coverLetter: payload.coverLetter,
-          resumeUrl: payload.resumeUrl,
-          portfolioUrl: payload.portfolioUrl,
         },
         include: {
           internship: {
