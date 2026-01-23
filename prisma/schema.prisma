@@ -97,6 +97,7 @@ model Student {
   applications InternshipApplication[]
   advisors     AdvisorAssignment[]
   internshipAcceptances InternshipAcceptance[]
+  testProjects TestProject[]
 }
 
 model Company {
@@ -106,6 +107,7 @@ model Company {
   user      User     @relation(fields: [userId], references: [id])
   internships Internship[]
   internshipAcceptances InternshipAcceptance[]
+  testProjects TestProject[]
 }
 
 enum InternshipType {
@@ -151,6 +153,7 @@ model Internship {
 
   applications  InternshipApplication[]
   internshipAcceptances InternshipAcceptance[]
+  testProjects TestProject[]
 }
 
 
@@ -249,4 +252,22 @@ model InternshipAcceptance {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   @@unique([internshipId, studentId]) // one acceptance per internship per student
+}
+
+model TestProject {
+  id            Int      @id @default(autoincrement())
+  description     String
+  projectUrl  String?
+
+  internshipId  Int
+  companyId     Int
+  studentId     Int
+
+  internship    Internship @relation(fields: [internshipId], references: [id], onDelete: Cascade)
+  company       Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  student       Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  @@unique([internshipId, studentId]) // one test project per internship per student
 }
