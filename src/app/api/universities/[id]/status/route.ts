@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { handleUpdateUniversityStatus } from "@/controllers/institutionController";
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
-  const universityId = parseInt(id, 10);
+type RouteParams = {
+  params: Promise<{ id: string }>;
+};
 
-  if (isNaN(universityId)) {
+export async function PUT(request: NextRequest, { params }: RouteParams) {
+  const { id } = await params;
+  const idNum = parseInt(id, 10);
+
+  if (isNaN(idNum)) {
     return NextResponse.json(
       { message: "Invalid university ID" },
       { status: 400 },
@@ -19,13 +20,13 @@ export async function PUT(
 
   try {
     body = await request.json();
-  } catch {
+  } catch (error) {
     return NextResponse.json(
-      { message: "Invalid JSON body" },
+      { message: "Invalid JSON body", details: (error as Error).message },
       { status: 400 },
     );
   }
 
-  const result = await handleUpdateUniversityStatus(universityId, body);
+  const result = await handleUpdateUniversityStatus(idNum, body);
   return NextResponse.json(result.body, { status: result.status });
 }

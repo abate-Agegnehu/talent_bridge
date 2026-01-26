@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { handleGetInternshipAcceptanceByStudentId } from "@/controllers/internshipAcceptanceController";
+import { handleGetFinalEvaluationsByStudentId } from "@/controllers/finalEvaluationController";
 
 type RouteParams = {
   params: Promise<{ id: string }>;
@@ -16,6 +16,6 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     );
   }
 
-  const result = await handleGetInternshipAcceptanceByStudentId(studentId);
+  const result = await handleGetFinalEvaluationsByStudentId(studentId);
   return NextResponse.json(result.body, { status: result.status });
 }

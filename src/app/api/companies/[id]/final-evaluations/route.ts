@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { handleGetInternshipAcceptanceByStudentId } from "@/controllers/internshipAcceptanceController";
+import { handleGetFinalEvaluationsByCompanyId } from "@/controllers/finalEvaluationController";
 
 type RouteParams = {
   params: Promise<{ id: string }>;
@@ -7,15 +7,15 @@ type RouteParams = {
 
 export async function GET(_request: NextRequest, { params }: RouteParams) {
   const { id } = await params;
-  const studentId = parseInt(id, 10);
+  const companyId = parseInt(id, 10);
 
-  if (isNaN(studentId)) {
+  if (isNaN(companyId)) {
     return NextResponse.json(
-      { message: "Invalid student ID" },
+      { message: "Invalid company ID" },
       { status: 400 },
     );
   }
 
-  const result = await handleGetInternshipAcceptanceByStudentId(studentId);
+  const result = await handleGetFinalEvaluationsByCompanyId(companyId);
   return NextResponse.json(result.body, { status: result.status });
 }

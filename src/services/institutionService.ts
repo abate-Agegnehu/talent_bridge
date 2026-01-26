@@ -214,6 +214,12 @@ export async function createUniversity(payload: UniversityPayload) {
   );
 }
 
+export async function updateUniversityStatus(id: number, status: RegistrationStatus) {
+  return prisma.university.update({
+    where: { id },
+    data: { status },
+  });
+}
 export async function createAdmin(payload: AdminPayload) {
   // Use transaction to ensure atomicity with timeout
   return prisma.$transaction(
@@ -1292,21 +1298,4 @@ export async function deleteAdvisor(id: number) {
       timeout: 20000,
     },
   );
-}
-
-export async function updateUniversityStatus(id: number, status: RegistrationStatus) {
-  return prisma.university.update({
-    where: { id },
-    data: { status },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
-        },
-      },
-    },
-  });
 }

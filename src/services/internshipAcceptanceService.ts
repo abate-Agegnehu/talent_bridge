@@ -7,74 +7,55 @@ export type CreateInternshipAcceptancePayload = {
   letter: string;
 };
 
-export async function createInternshipAcceptance(data: CreateInternshipAcceptancePayload) {
-  // Verify that the internship, student and company exist is handled by foreign key constraints,
-  // but we might want to check if the student has already accepted another internship if business logic requires.
-  // The schema has @@unique([internshipId, studentId]), so duplicate acceptance for same internship is prevented.
-  
+export async function createInternshipAcceptance(
+  payload: CreateInternshipAcceptancePayload
+) {
   return prisma.internshipAcceptance.create({
     data: {
-      internshipId: data.internshipId,
-      studentId: data.studentId,
-      companyId: data.companyId,
-      letter: data.letter,
+      internshipId: payload.internshipId,
+      studentId: payload.studentId,
+      companyId: payload.companyId,
+      letter: payload.letter,
     },
     include: {
       internship: true,
-      student: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              role: true
-            }
-          }
-        }
-      },
-      company: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              role: true
-            }
-          }
-        }
-      }
-    }
+      student: true,
+      company: true,
+    },
   });
 }
 
-export async function updateInternshipAcceptanceDepartment(id: number, departmentId: number) {
+export async function updateInternshipAcceptanceDepartment(
+  id: number,
+  departmentId: number
+) {
   return prisma.internshipAcceptance.update({
     where: { id },
-    data: { departmentId },
+    data: {
+      departmentId,
+    },
     include: {
-        department: true
-    }
+      department: true,
+    },
   });
 }
 
 export async function getInternshipAcceptancesByStudentId(studentId: number) {
   return prisma.internshipAcceptance.findMany({
-    where: { studentId },
+    where: {
+      studentId,
+    },
     include: {
-      internship: true,
-      company: {
+      internship: {
         include: {
-            user: {
-                select: {
-                    name: true,
-                    email: true
-                }
-            }
-        }
+          company: true,
+        },
       },
+      company: true,
       department: true,
+    },
+    orderBy: {
+      createdAt: "desc",
     },
   });
 }

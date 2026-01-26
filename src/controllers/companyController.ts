@@ -249,42 +249,44 @@ export async function handleUpdateCompanyStatus(
   id: number,
   payload: unknown,
 ): Promise<ControllerResult<unknown>> {
-  if (typeof payload !== "object" || payload === null) {
-    return { status: 400, body: { message: "Request body must be an object" } };
-  }
-
-  const value = payload as Record<string, unknown>;
-  const status = value.status;
-
-  if (
-    typeof status !== "string" ||
-    !["PENDING", "ACCEPTED", "REJECTED"].includes(status)
-  ) {
-    return {
-      status: 400,
-      body: { message: "status must be one of PENDING, ACCEPTED, REJECTED" },
-    };
-  }
-
   try {
-    const updated = await updateCompanyStatus(
-      id,
-      status as RegistrationStatus,
-    );
-    return { status: 200, body: updated };
-  } catch (error) {
-    console.error("Error updating company status:", error);
-    
-    if ((error as { code?: string }).code === "P2025") {
+    if (typeof payload !== "object" || payload === null) {
+      return { status: 400, body: { message: "Request body must be an object" } };
+    }
+
+    const value = payload as Record<string, unknown>;
+    const status = value.status;
+
+    // Check if RegistrationStatus is defined
+    if (!RegistrationStatus) {
+      throw new Error("RegistrationStatus enum is not defined");
+    }
+
+    if (
+      !status ||
+      !Object.values(RegistrationStatus).includes(status as RegistrationStatus)
+    ) {
       return {
-        status: 404,
-        body: { message: "Company not found" },
+        status: 400,
+        body: {
+          message: `Status must be one of: ${Object.values(RegistrationStatus).join(", ")}`,
+        },
       };
     }
 
-    return {
-      status: 500,
-      body: { message: "Failed to update company status" },
+    const updated = await updateCompanyStatus(id, status as RegistrationStatus);
+    return { status: 200, body: updated };
+  } catch (error) {
+    console.error("Error updating company status:", error);
+    if ((error as { code?: string }).code === "P2025") {
+      return { status: 404, body: { message: "Company not found" } };
+    }
+    return { 
+      status: 500, 
+      body: { 
+        message: "Failed to update company status",
+        error: error instanceof Error ? error.message : String(error)
+      } 
     };
   }
 }

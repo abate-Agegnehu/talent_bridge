@@ -98,6 +98,8 @@ model Student {
   advisors     AdvisorAssignment[]
   internshipAcceptances InternshipAcceptance[]
   testProjects TestProject[]
+  weeklyReport WeeklyReport[]
+  finalEvaluations FinalEvaluation[]
 }
 
 model Company {
@@ -108,6 +110,8 @@ model Company {
   internships Internship[]
   internshipAcceptances InternshipAcceptance[]
   testProjects TestProject[]
+  weeklyReport  WeeklyReport[]
+  finalEvaluations FinalEvaluation[]
 }
 
 enum InternshipType {
@@ -271,3 +275,56 @@ model TestProject {
   updatedAt     DateTime @updatedAt
   @@unique([internshipId, studentId]) // one test project per internship per student
 }
+
+model WeeklyReport{
+  id Int @id @default(autoincrement())
+  companyId Int
+  studentId Int
+  weekNumber Int
+  activity String
+
+  company       Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  student       Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+model FinalEvaluation { 
+  id                Int      @id @default(autoincrement()) 
+
+  supervisorName    String 
+  studentId         Int 
+  companyId         Int 
+
+  // ===== General Performance (25%) ===== 
+  punctuality        Int // Max 5
+  reliability        Int // Max 5
+  independenceInWork Int // Max 5
+  communication      Int // Max 5
+  professionalism   Int // Max 5
+
+  // ===== Personal Skills (25%) ===== 
+  speedOfWork        Int // Max 5
+  accuracy           Int // Max 5
+  engagement         Int // Max 5
+  neededForWork     Int // Max 5
+  cooperation        Int // Max 5
+
+  // ===== Professional Skills (50%) ===== 
+  technicalSkills        Int // Max 5
+  organizationalSkills  Int // Max 5
+  projectTaskSupport    Int // Max 5
+  responsibility        Int // Max 15
+  teamQuality            Int // Max 20
+
+  // Result 
+  totalPercentage   Int 
+
+  // Approval 
+  supervisorSignature String? 
+  createdAt         DateTime @default(now()) 
+  updatedAt         DateTime @updatedAt 
+
+  student           Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  company           Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, studentId])
+} 

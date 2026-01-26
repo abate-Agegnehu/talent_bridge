@@ -215,34 +215,31 @@ export async function handleUpdateUniversityStatus(
   const status = value.status;
 
   if (
-    typeof status !== "string" ||
-    !["PENDING", "ACCEPTED", "REJECTED"].includes(status)
+    !status ||
+    !Object.values(RegistrationStatus).includes(status as RegistrationStatus)
   ) {
     return {
       status: 400,
-      body: { message: "status must be one of PENDING, ACCEPTED, REJECTED" },
+      body: {
+        message: `Status must be one of: ${Object.values(RegistrationStatus).join(", ")}`,
+      },
     };
   }
 
   try {
-    const updated = await updateUniversityStatus(
-      id,
-      status as RegistrationStatus,
-    );
+    const updated = await updateUniversityStatus(id, status as RegistrationStatus);
     return { status: 200, body: updated };
   } catch (error) {
     console.error("Error updating university status:", error);
-    
     if ((error as { code?: string }).code === "P2025") {
-      return {
-        status: 404,
-        body: { message: "University not found" },
-      };
+      return { status: 404, body: { message: "University not found" } };
     }
-
-    return {
-      status: 500,
-      body: { message: "Failed to update university status" },
+    return { 
+      status: 500, 
+      body: { 
+        message: "Failed to update university status",
+        error: error instanceof Error ? error.message : String(error)
+      } 
     };
   }
 }
