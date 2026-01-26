@@ -24,10 +24,12 @@ import {
   getUniversityById,
   assignAdvisorToStudent,
   updateAdvisor,
+  updateUniversityStatus,
   UniversityPayload,
   createAdmin,
   AdminPayload,
 } from "@/services/institutionService";
+import { RegistrationStatus } from "@/generated/prisma/enums";
 
 type ControllerResult<T> = {
   status: number;
@@ -837,6 +839,69 @@ export async function handleGetAdvisorsByStudentId(
     return {
       status: 500,
       body: { message: "Failed to fetch advisors" },
+    };
+  }
+}
+
+function validateStatusPayload(payload: unknown): ValidationResult {
+  if (typeof payload !== "object" || payload === null) {
+    return { valid: false, message: "Request body must be an object" };
+  }
+
+  const value = payload as Record<string, unknown>;
+  const status = value.status;
+
+  if (typeof status !== "string") {
+    return { valid: false, message: "status must be a string" };
+  }
+
+  const validStatuses = [
+    RegistrationStatus.PENDING,
+    RegistrationStatus.ACCEPTED,
+    RegistrationStatus.REJECTED,
+  ];
+
+  if (!validStatuses.includes(status as RegistrationStatus)) {
+    return {
+      valid: false,
+      message: `status must be one of: ${validStatuses.join(", ")}`,
+    };
+  }
+
+  return { valid: true };
+}
+
+export async function handleUpdateUniversityStatus(
+  id: number,
+  payload: unknown,
+): Promise<ControllerResult<unknown>> {
+  const validation = validateStatusPayload(payload);
+
+  if (!validation.valid) {
+    return {
+      status: 400,
+      body: { message: validation.message || "Invalid payload" },
+    };
+  }
+
+  try {
+    const status = (payload as { status: string }).status as RegistrationStatus;
+    const result = await updateUniversityStatus(id, status);
+    return { status: 200, body: result };
+  } catch (error) {
+    console.error("Error updating university status:", error);
+
+    if ((error as { code?: string }).code === "P2025") {
+      return {
+        status: 404,
+        body: { message: "University not found" },
+      };
+    }
+
+    const errorMessage = (error as Error).message || "Internal server error";
+    return {
+      status: 500,
+      body: { message: errorMessage },
     };
   }
 }
