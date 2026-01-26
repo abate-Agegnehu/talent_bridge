@@ -99,7 +99,6 @@ function validateInternshipApplicationPayload(
   const value = payload as Record<string, unknown>;
   const internshipId = value.internshipId;
   const studentId = value.studentId;
-  const coverLetter = value.coverLetter;
 
   if (
     typeof internshipId !== "number" ||
@@ -118,10 +117,6 @@ function validateInternshipApplicationPayload(
     studentId <= 0
   ) {
     return { valid: false, message: "studentId must be a positive integer" };
-  }
-
-  if (typeof coverLetter !== "string" || coverLetter.trim().length === 0) {
-    return { valid: false, message: "Cover letter is required" };
   }
 
   return { valid: true };

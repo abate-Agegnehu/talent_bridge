@@ -127,15 +127,6 @@ export async function handleCreateFinalEvaluation(
     return { status: 201, body: result };
   } catch (error) {
     console.error("Error creating final evaluation:", error);
-    
-    // Check for Prisma unique constraint violation (P2002)
-    if ((error as { code?: string; meta?: { target?: string[] } }).code === "P2002") {
-      return {
-        status: 409,
-        body: { message: "A final evaluation already exists for this student by this company." },
-      };
-    }
-
     return { status: 500, body: { message: "Internal server error" } };
   }
 }
