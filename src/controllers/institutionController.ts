@@ -3,7 +3,6 @@ import {
   AdvisorUpdatePayload,
   AdvisorAssignmentPayload,
   CollegePayload,
-  AdminPayload,
   createAdvisor,
   createCollege,
   createDepartment,
@@ -27,9 +26,8 @@ import {
   updateAdvisor,
   UniversityPayload,
   createAdmin,
-  updateUniversityStatus,
+  AdminPayload,
 } from "@/services/institutionService";
-import { RegistrationStatus } from "@/generated/prisma/enums";
 
 type ControllerResult<T> = {
   status: number;
@@ -203,47 +201,6 @@ export async function handleCreateUniversity(
   }
 }
 
-export async function handleUpdateUniversityStatus(
-  id: number,
-  payload: unknown,
-): Promise<ControllerResult<unknown>> {
-  if (typeof payload !== "object" || payload === null) {
-    return { status: 400, body: { message: "Request body must be an object" } };
-  }
-
-  const value = payload as Record<string, unknown>;
-  const status = value.status;
-
-  if (
-    !status ||
-    !Object.values(RegistrationStatus).includes(status as RegistrationStatus)
-  ) {
-    return {
-      status: 400,
-      body: {
-        message: `Status must be one of: ${Object.values(RegistrationStatus).join(", ")}`,
-      },
-    };
-  }
-
-  try {
-    const updated = await updateUniversityStatus(id, status as RegistrationStatus);
-    return { status: 200, body: updated };
-  } catch (error) {
-    console.error("Error updating university status:", error);
-    if ((error as { code?: string }).code === "P2025") {
-      return { status: 404, body: { message: "University not found" } };
-    }
-    return { 
-      status: 500, 
-      body: { 
-        message: "Failed to update university status",
-        error: error instanceof Error ? error.message : String(error)
-      } 
-    };
-  }
-}
-
 export async function handleCreateAdmin(
   payload: unknown,
 ): Promise<ControllerResult<unknown>> {
@@ -275,7 +232,7 @@ export async function handleCreateAdmin(
     }
     return {
       status: 500,
-      body: { message: "Failed to create admin" },
+      body: { message: "Failed to create Admin" },
     };
   }
 }
@@ -294,6 +251,9 @@ export async function handleGetAllColleges(): Promise<
     };
   }
 }
+
+
+
 
 export async function handleGetCollegeById(
   id: number,
