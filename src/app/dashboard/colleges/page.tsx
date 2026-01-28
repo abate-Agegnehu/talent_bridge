@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export default function CollegesPage() {
   return (
     <div className="space-y-6">
-      <h2 className="text-3xl font-bold tracking-tight text-slate-900">Colleges</h2>
+      <h2 className="text-3xl font-bold tracking-tight text-foreground">Colleges</h2>
       <Card>
         <CardHeader>
           <CardTitle>Colleges</CardTitle>

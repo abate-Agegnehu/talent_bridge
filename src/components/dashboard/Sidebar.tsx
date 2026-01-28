@@ -17,11 +17,11 @@ export function Sidebar({ role, className }: SidebarProps) {
   const menuGroups = MENU_ITEMS[role] || [];
 
   return (
-    <div className={cn("pb-12 min-h-screen w-64 border-r border-slate-200 bg-white", className)}>
+    <div className={cn("pb-12 min-h-screen w-64 border-r border-border bg-card", className)}>
       <div className="space-y-4 py-4">
         <div className="px-3 py-2">
         <div className="flex items-center justify-center gap-2 mb-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500 text-white">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-6 w-6"
@@ -37,12 +37,12 @@ export function Sidebar({ role, className }: SidebarProps) {
               />
             </svg>
           </div>
-          <span className="text-2xl font-bold text-blue-500">TalentBridge</span>
+          <span className="text-2xl font-bold text-primary">TalentBridge</span>
         </div>
           <div className="space-y-1">
             {menuGroups.map((group, i) => (
               <div key={i} className="mb-6">
-                <h4 className="mb-2 px-4 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <h4 className="mb-2 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {group.label}
                 </h4>
                 <div className="space-y-1">
@@ -52,7 +52,7 @@ export function Sidebar({ role, className }: SidebarProps) {
                       variant={item.active ? "secondary" : "ghost"}
                       className={cn(
                         "w-full justify-start",
-                        item.active && "bg-blue-50 text-blue-700 hover:bg-blue-100"
+                        item.active && "bg-accent text-accent-foreground"
                       )}
                       asChild
                     >
@@ -72,7 +72,7 @@ export function Sidebar({ role, className }: SidebarProps) {
          <div className="px-4 pb-6">
             <Button 
               variant="ghost" 
-              className="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700"
+              className="w-full justify-start text-destructive hover:bg-destructive/10 hover:text-destructive"
               onClick={() => signOut({ callbackUrl: "/login" })}
             >
                 <LogOut className="mr-2 h-4 w-4" />

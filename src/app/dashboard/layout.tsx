@@ -19,19 +19,18 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-slate-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
-          <p className="text-sm font-medium text-slate-600">Loading dashboard...</p>
-        </div>
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     );
   }
 
-  if (!role) return null;
+  if (!role) {
+    return null;
+  }
 
   return (
-    <div className="flex min-h-screen w-full bg-slate-50">
+    <div className="flex min-h-screen w-full bg-muted/40">
       <div className="hidden md:block fixed inset-y-0 left-0 z-40">
         <Sidebar role={role} />
       </div>

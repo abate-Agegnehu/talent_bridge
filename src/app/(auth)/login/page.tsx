@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { signIn, useSession } from "next-auth/react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -44,41 +46,20 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-purple-50 p-4">
-      <div className="w-full max-w-md rounded-xl border-2 border-purple-400 bg-white p-8 shadow-sm">
-        {/* Logo */}
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500 text-white">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-              />
-            </svg>
-          </div>
-          <span className="text-2xl font-bold text-blue-500">TalentBridge</span>
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="w-full max-w-md rounded-xl border border-border bg-card p-8 shadow-sm">
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold text-foreground">Welcome Back</h1>
+          <p className="text-muted-foreground mt-2">Log in to your TalentBridge account.</p>
         </div>
-
-        {/* Subtitle */}
-        <p className="text-center text-gray-500 mb-8">
-          Log in to your TalentBridge account.
-        </p>
 
         <form onSubmit={onSubmit} className="space-y-5">
           {/* Email field */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-foreground mb-1">
               Email or Username
             </label>
-            <input
+            <Input
               type="email"
               name="email"
               autoComplete="email"
@@ -86,16 +67,15 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
           {/* Password field */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-foreground mb-1">
               Password
             </label>
-            <input
+            <Input
               type="password"
               name="password"
               autoComplete="current-password"
@@ -103,12 +83,11 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
             <div className="mt-1 text-right">
               <Link
                 href="/forgot-password"
-                className="text-sm text-blue-500 hover:text-blue-600 hover:underline"
+                className="text-sm text-primary hover:text-primary/90 hover:underline"
               >
                 Forgot Password?
               </Link>
@@ -116,26 +95,26 @@ export default function LoginPage() {
           </div>
 
           {error ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">
+            <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-2.5 text-sm text-destructive">
               {error}
             </div>
           ) : null}
 
           {/* Login button */}
-          <button
+          <Button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-600 disabled:opacity-60 transition-colors"
+            className="w-full"
           >
             {loading ? "Logging in..." : "Login"}
-          </button>
+          </Button>
 
           {/* Sign up link */}
-          <p className="text-center text-sm text-gray-600">
+          <p className="text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}
             <Link
               href="/signup"
-              className="font-semibold text-blue-500 hover:text-blue-600 hover:underline"
+              className="font-semibold text-primary hover:text-primary/90 hover:underline"
             >
               Sign Up
             </Link>

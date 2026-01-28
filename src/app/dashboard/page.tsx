@@ -36,7 +36,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight text-slate-900">Dashboard</h2>
+        <h2 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h2>
         <div className="flex items-center space-x-2">
           <Button>Download Report</Button>
         </div>
@@ -330,14 +330,14 @@ function AdvisorDashboard() {
                         { student: "Tirunesh Dibaba", week: "Week 4", status: "Pending" },
                         { student: "Haile Gebrselassie", week: "Week 3", status: "Late" },
                      ].map((item, i) => (
-                        <div key={i} className="flex items-center justify-between p-3 border rounded-lg bg-white">
+                        <div key={i} className="flex items-center justify-between p-3 border border-border rounded-lg bg-card">
                             <div className="flex items-center gap-3">
                                 <Avatar className="h-8 w-8">
                                     <AvatarFallback>{item.student[0]}</AvatarFallback>
                                 </Avatar>
                                 <div>
-                                    <p className="font-medium text-sm">{item.student}</p>
-                                    <p className="text-xs text-slate-500">{item.week}</p>
+                                    <p className="font-medium text-sm text-foreground">{item.student}</p>
+                                    <p className="text-xs text-muted-foreground">{item.week}</p>
                                 </div>
                             </div>
                             <Button size="sm" variant="secondary">Review</Button>
@@ -394,10 +394,10 @@ function CompanyDashboard() {
                         { name: "Student B", role: "Backend Dev", gpa: "3.5" },
                         { name: "Student C", role: "Frontend Dev", gpa: "3.9" },
                     ].map((item, i) => (
-                        <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div key={i} className="flex items-center justify-between p-3 border border-border rounded-lg bg-card">
                             <div>
-                                <p className="font-medium">{item.name}</p>
-                                <p className="text-xs text-slate-500">Applied for {item.role}</p>
+                                <p className="font-medium text-foreground">{item.name}</p>
+                                <p className="text-xs text-muted-foreground">Applied for {item.role}</p>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Badge variant="secondary">GPA {item.gpa}</Badge>
@@ -430,26 +430,26 @@ function StudentDashboard() {
             </CardHeader>
             <CardContent>
                 <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 bg-red-50 border border-red-100 rounded-lg">
+                    <div className="flex items-center justify-between p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
                         <div className="flex items-center gap-4">
-                            <div className="bg-red-100 p-2 rounded-full text-red-600">
+                            <div className="bg-destructive/20 p-2 rounded-full text-destructive">
                                 <FileText className="h-5 w-5" />
                             </div>
                             <div>
-                                <h4 className="font-semibold text-red-900">Submit Week 4 Report</h4>
-                                <p className="text-sm text-red-700">Due: Today, 11:59 PM</p>
+                                <h4 className="font-semibold text-foreground">Submit Week 4 Report</h4>
+                                <p className="text-sm text-muted-foreground">Due: Today, 11:59 PM</p>
                             </div>
                         </div>
-                        <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white">Submit Now</Button>
+                        <Button size="sm" variant="destructive">Submit Now</Button>
                     </div>
-                     <div className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-lg opacity-60">
+                     <div className="flex items-center justify-between p-4 bg-card border border-border rounded-lg opacity-60">
                         <div className="flex items-center gap-4">
-                             <div className="bg-slate-100 p-2 rounded-full text-slate-600">
+                             <div className="bg-muted p-2 rounded-full text-muted-foreground">
                                 <CheckCircle2 className="h-5 w-5" />
                             </div>
                             <div>
-                                <h4 className="font-semibold text-slate-900 line-through">Week 3 Report</h4>
-                                <p className="text-sm text-slate-500">Submitted on Monday</p>
+                                <h4 className="font-semibold text-foreground line-through">Week 3 Report</h4>
+                                <p className="text-sm text-muted-foreground">Submitted on Monday</p>
                             </div>
                         </div>
                         <Badge variant="outline">Completed</Badge>
@@ -463,11 +463,11 @@ function StudentDashboard() {
              </CardHeader>
              <CardContent className="flex flex-col items-center text-center space-y-4">
                  <Avatar className="h-20 w-20">
-                     <AvatarFallback className="text-xl">DA</AvatarFallback>
+                     <AvatarFallback className="text-xl bg-muted">DA</AvatarFallback>
                  </Avatar>
                  <div>
-                     <p className="font-medium text-lg">Dr. Alemu</p>
-                     <p className="text-sm text-slate-500">Computer Science Dept</p>
+                     <p className="font-medium text-lg text-foreground">Dr. Alemu</p>
+                     <p className="text-sm text-muted-foreground">Computer Science Dept</p>
                  </div>
                  <Button className="w-full" variant="outline">
                      <MessageSquare className="mr-2 h-4 w-4" />
@@ -489,11 +489,11 @@ function StatsCard({ title, value, icon: Icon, description }: { title: string, v
         <CardTitle className="text-sm font-medium">
           {title}
         </CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground text-slate-500" />
+        <Icon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-muted-foreground text-slate-500">
+        <div className="text-2xl font-bold text-foreground">{value}</div>
+        <p className="text-xs text-muted-foreground">
           {description}
         </p>
       </CardContent>
@@ -503,10 +503,10 @@ function StatsCard({ title, value, icon: Icon, description }: { title: string, v
 
 function ActivityItem({ title, time }: { title: string, time: string }) {
     return (
-        <div className="flex items-start gap-2 border-l-2 border-slate-200 pl-3 py-1">
+        <div className="flex items-start gap-2 border-l-2 border-border pl-3 py-1">
             <div className="flex flex-col">
-                <span className="text-sm font-medium">{title}</span>
-                <span className="text-xs text-slate-500">{time}</span>
+                <span className="text-sm font-medium text-foreground">{title}</span>
+                <span className="text-xs text-muted-foreground">{time}</span>
             </div>
         </div>
     )

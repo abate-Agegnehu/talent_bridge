@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export default function ApplyPage() {
   return (
     <div className="space-y-6">
-      <h2 className="text-3xl font-bold tracking-tight text-slate-900">Assign Advisor</h2>
+      <h2 className="text-3xl font-bold tracking-tight text-foreground">Assign Advisor</h2>
       <Card>
         <CardHeader>
           <CardTitle>Assign Advisor For Student</CardTitle>

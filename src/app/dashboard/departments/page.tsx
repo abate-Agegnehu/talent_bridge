@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export default function DepartmentsPage() {
   return (
     <div className="space-y-6">
-      <h2 className="text-3xl font-bold tracking-tight text-slate-900">Departments</h2>
+      <h2 className="text-3xl font-bold tracking-tight text-foreground">Departments</h2>
       <Card>
         <CardHeader>
           <CardTitle>Departments</CardTitle>

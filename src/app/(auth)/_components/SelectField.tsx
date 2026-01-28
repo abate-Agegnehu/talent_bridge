@@ -1,4 +1,5 @@
 import type { SelectHTMLAttributes } from "react";
+import { cn } from "@/lib/utils";
 
 export function SelectField({
   label,
@@ -17,18 +18,17 @@ export function SelectField({
       <span className="mb-1 block text-sm font-medium">{label}</span>
       <select
         id={id}
-        className={[
-          "w-full rounded-xl border bg-white px-3 py-2 text-sm outline-none",
-          "border-zinc-200 focus:border-zinc-400",
-          "dark:bg-zinc-950 dark:border-zinc-800 dark:focus:border-zinc-600",
-          error ? "border-red-500 focus:border-red-500 dark:border-red-500" : "",
-        ].join(" ")}
+        className={cn(
+          "w-full rounded-xl border bg-background px-3 py-2 text-sm outline-none",
+          "border-input focus:border-ring focus:ring-1 focus:ring-ring",
+          error && "border-destructive focus:border-destructive"
+        )}
         {...props}
       >
         {children}
       </select>
       {error ? (
-        <span className="mt-1 block text-xs text-red-600 dark:text-red-400">
+        <span className="mt-1 block text-xs text-destructive">
           {error}
         </span>
       ) : null}

@@ -2,11 +2,11 @@ import Link from "next/link";
 
 export default function SignupIndexPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-purple-50 p-4">
-      <div className="w-full max-w-md rounded-xl border-2 border-purple-400 bg-white p-8 shadow-sm">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="w-full max-w-md rounded-xl border border-border bg-card p-8 shadow-sm">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500 text-white">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-6 w-6"
@@ -22,39 +22,39 @@ export default function SignupIndexPage() {
               />
             </svg>
           </div>
-          <span className="text-2xl font-bold text-blue-500">TalentBridge</span>
+          <span className="text-2xl font-bold text-primary">TalentBridge</span>
         </div>
 
         {/* Subtitle */}
-        <p className="text-center text-gray-500 mb-8">
+        <p className="text-center text-muted-foreground mb-8">
           Create your TalentBridge account.
         </p>
 
         <div className="space-y-3">
           <Link
             href="/signup/company"
-            className="block w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-center text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:border-blue-400 transition-colors"
+            className="block w-full rounded-lg border border-input bg-card px-4 py-3 text-center text-sm font-semibold text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
           >
             Sign up as Company
           </Link>
           <Link
             href="/signup/university"
-            className="block w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-center text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:border-blue-400 transition-colors"
+            className="block w-full rounded-lg border border-input bg-card px-4 py-3 text-center text-sm font-semibold text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
           >
             Sign up as University
           </Link>
           <Link
             href="/signup/student"
-            className="block w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-center text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:border-blue-400 transition-colors"
+            className="block w-full rounded-lg border border-input bg-card px-4 py-3 text-center text-sm font-semibold text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
           >
             Sign up as Student
           </Link>
 
-          <p className="pt-4 text-center text-sm text-gray-600">
+          <p className="pt-4 text-center text-sm text-muted-foreground">
             Already have an account?{" "}
             <Link
               href="/login"
-              className="font-semibold text-blue-500 hover:text-blue-600 hover:underline"
+              className="font-semibold text-primary hover:text-primary/90 hover:underline"
             >
               Login
             </Link>
