@@ -132,7 +132,6 @@ export const MENU_ITEMS: Record<Role, {
       label: "Internships",
       items: [
         { label: "Manage Internships", icon: Briefcase, href: "/dashboard/internships" },
-        { label: "Applicants", icon: Users, href: "/dashboard/applicants" },
       ]
     },
     {

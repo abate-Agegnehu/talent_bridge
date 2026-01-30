@@ -265,6 +265,7 @@ export async function updateUniversityStatus(id: number, status: RegistrationSta
     data: { status },
   });
 }
+
 export async function createAdmin(payload: AdminPayload) {
   // Use transaction to ensure atomicity with timeout
   return prisma.$transaction(

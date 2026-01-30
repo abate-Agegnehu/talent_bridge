@@ -147,6 +147,60 @@ export async function createInternship(payload: InternshipPayload) {
   });
 }
 
+export type InternshipUpdatePayload = Partial<Omit<InternshipPayload, "companyId">> & {
+  status?: InternshipStatus;
+};
+
+export async function updateInternship(id: number, payload: InternshipUpdatePayload) {
+  const internship = await prisma.internship.findUnique({
+    where: { id },
+  });
+
+  if (!internship) {
+    throw new Error("Internship not found");
+  }
+
+  const updateData: any = { ...payload };
+  if (payload.applicationDeadline) {
+    updateData.applicationDeadline = new Date(payload.applicationDeadline);
+  }
+
+  return prisma.internship.update({
+    where: { id },
+    data: updateData,
+    include: {
+      company: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+export async function deleteInternship(id: number) {
+  const internship = await prisma.internship.findUnique({
+    where: { id },
+  });
+
+  if (!internship) {
+    throw new Error("Internship not found");
+  }
+
+  await prisma.internship.delete({
+    where: { id },
+  });
+
+  return { id, deleted: true };
+}
+
 export async function createInternshipApplication(
   payload: InternshipApplicationPayload,
 ) {

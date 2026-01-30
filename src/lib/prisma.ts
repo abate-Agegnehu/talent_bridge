@@ -13,12 +13,6 @@ export const prisma =
         url: process.env.DATABASE_URL,
       },
     },
-    // Add connection timeout and retry configuration
-    __internal: {
-      engine: {
-        connectTimeout: 10000, // 10 seconds
-      },
-    },
   });
 
 // Handle connection errors gracefully
