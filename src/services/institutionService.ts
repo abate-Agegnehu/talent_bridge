@@ -183,6 +183,51 @@ export async function getUniversityById(id: number) {
   }
 }
 
+export async function getCollegesByUniversityId(universityId: number) {
+  try {
+    const collegeIds = await prisma.$queryRaw<Array<{ id: number }>>`
+      SELECT id FROM "College" WHERE "universityId" = ${universityId} AND "userId" IS NOT NULL ORDER BY id ASC
+    `;
+
+    if (collegeIds.length === 0) {
+      return [];
+    }
+
+    const ids = collegeIds.map(c => c.id);
+
+    try {
+      return await prisma.college.findMany({
+        where: {
+          id: { in: ids },
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+            },
+          },
+        },
+        orderBy: {
+          id: "asc",
+        },
+      });
+    } catch (error) {
+      if ((error as { code?: string }).code === "P2032") {
+        return [];
+      }
+      throw error;
+    }
+  } catch (error) {
+    if ((error as { code?: string }).code === "P2032") {
+      return [];
+    }
+    throw error;
+  }
+}
+
 export async function createUniversity(payload: UniversityPayload) {
   // Use transaction to ensure atomicity with timeout
   return prisma.$transaction(
