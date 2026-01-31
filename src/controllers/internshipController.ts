@@ -6,11 +6,14 @@ import {
   getInternshipApplicationsByCompanyId,
   getInternshipApplicationsByStudentId,
   getInternshipsByCompanyId,
+  updateInternship,
+  deleteInternship,
   updateInternshipApplicationStatus,
   InternshipApplicationPayload,
   InternshipPayload,
+  InternshipUpdatePayload,
 } from "@/services/internshipService";
-import { InternshipType, ApplicationStatus } from "@/generated/prisma/enums";
+import { InternshipType, ApplicationStatus, InternshipStatus } from "@/generated/prisma/enums";
 
 type ControllerResult<T> = {
   status: number;
@@ -84,6 +87,40 @@ function validateInternshipPayload(payload: unknown): ValidationResult {
       valid: false,
       message: "Application deadline must be a valid date (ISO format)",
     };
+  }
+
+  return { valid: true };
+}
+
+function validateInternshipUpdatePayload(payload: unknown): ValidationResult {
+  if (typeof payload !== "object" || payload === null) {
+    return { valid: false, message: "Request body must be an object" };
+  }
+  
+  const value = payload as Record<string, unknown>;
+
+  if (value.type && !Object.values(InternshipType).includes(value.type as InternshipType)) {
+      return {
+      valid: false,
+      message: `Type must be one of: ${Object.values(InternshipType).join(", ")}`,
+    };
+  }
+  
+  if (value.status && !Object.values(InternshipStatus).includes(value.status as InternshipStatus)) {
+      return {
+      valid: false,
+      message: `Status must be one of: ${Object.values(InternshipStatus).join(", ")}`,
+    };
+  }
+
+  if (value.applicationDeadline) {
+      const deadlineDate = new Date(value.applicationDeadline as string);
+      if (isNaN(deadlineDate.getTime())) {
+        return {
+          valid: false,
+          message: "Application deadline must be a valid date (ISO format)",
+        };
+      }
   }
 
   return { valid: true };
@@ -181,6 +218,58 @@ export async function handleCreateInternship(
     return {
       status: 500,
       body: { message: errorMessage },
+    };
+  }
+}
+
+export async function handleUpdateInternship(
+  id: number,
+  payload: unknown,
+): Promise<ControllerResult<unknown>> {
+  const validation = validateInternshipUpdatePayload(payload);
+
+  if (!validation.valid) {
+    return {
+      status: 400,
+      body: { message: validation.message ?? "Invalid request body" },
+    };
+  }
+
+  try {
+    const internship = await updateInternship(id, payload as InternshipUpdatePayload);
+    return { status: 200, body: internship };
+  } catch (error) {
+    console.error("Error updating internship:", error);
+    if ((error as Error).message === "Internship not found") {
+      return {
+        status: 404,
+        body: { message: "Internship not found" },
+      };
+    }
+    return {
+      status: 500,
+      body: { message: "Failed to update internship" },
+    };
+  }
+}
+
+export async function handleDeleteInternship(
+  id: number,
+): Promise<ControllerResult<unknown>> {
+  try {
+    const result = await deleteInternship(id);
+    return { status: 200, body: result };
+  } catch (error) {
+    console.error("Error deleting internship:", error);
+    if ((error as Error).message === "Internship not found") {
+      return {
+        status: 404,
+        body: { message: "Internship not found" },
+      };
+    }
+    return {
+      status: 500,
+      body: { message: "Failed to delete internship" },
     };
   }
 }
@@ -321,13 +410,11 @@ function validateApplicationStatusUpdatePayload(
   const value = payload as Record<string, unknown>;
   const status = value.status;
 
-  if (
-    !status ||
-    !Object.values(ApplicationStatus).includes(status as ApplicationStatus)
-  ) {
+  const allowedStatuses = [...Object.values(ApplicationStatus), "COMPLETED"];
+  if (!status || !allowedStatuses.includes(status as ApplicationStatus | "COMPLETED")) {
     return {
       valid: false,
-      message: `Status must be one of: ${Object.values(ApplicationStatus).join(", ")}`,
+      message: `Status must be one of: ${allowedStatuses.join(", ")}`,
     };
   }
 
@@ -350,7 +437,8 @@ export async function handleUpdateInternshipApplicationStatus(
 
   try {
     const value = payload as Record<string, unknown>;
-    const status = value.status as ApplicationStatus;
+    const statusStr = value.status as string;
+    const status = statusStr as unknown as ApplicationStatus;
 
     const application = await updateInternshipApplicationStatus(
       studentId,

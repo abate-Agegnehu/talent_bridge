@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
 import { hashPassword } from "@/lib/password";
-import { Role } from "@/generated/prisma/enums";
+import { Role, RegistrationStatus } from "@/generated/prisma/enums";
 
 export type CompanyPayload = {
   name: string;

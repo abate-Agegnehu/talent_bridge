@@ -9,50 +9,64 @@ interface User {
   name: string;
   email: string;
   role: Role;
+  status?: "PENDING" | "ACCEPTED" | "REJECTED";
 }
 
 interface DashboardContextType {
   user: User | null;
   role: Role | null;
+  status: "PENDING" | "ACCEPTED" | "REJECTED" | null;
   isLoading: boolean;
 }
 
 const DashboardContext = createContext<DashboardContextType>({
   user: null,
   role: null,
+  status: null,
   isLoading: true,
 });
 
 export function DashboardProvider({ children }: { children: React.ReactNode }) {
-  const { data: session, status } = useSession();
+  const { data: session, status: authStatus } = useSession();
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<Role | null>(null);
+  const [status, setStatus] = useState<"PENDING" | "ACCEPTED" | "REJECTED" | null>(null);
   const [isContextLoading, setIsContextLoading] = useState(true);
 
   useEffect(() => {
-    if (status === "loading") {
+    if (authStatus === "loading") {
       return;
     }
 
-    if (status === "authenticated" && session?.user) {
+    if (authStatus === "authenticated" && session?.user) {
+      // @ts-ignore
+      const universityStatus = session.university?.status;
+      // @ts-ignore
+      const companyStatus = session.company?.status;
+      
+      const userStatus = universityStatus || companyStatus || "ACCEPTED";
+
       const userData: User = {
         id: Number(session.user.id),
         name: session.user.name || "",
         email: session.user.email || "",
         role: session.user.role as Role,
+        status: userStatus,
       };
       setUser(userData);
       setRole(userData.role);
-    } else if (status === "unauthenticated") {
+      setStatus(userStatus);
+    } else if (authStatus === "unauthenticated") {
       setUser(null);
       setRole(null);
+      setStatus(null);
     }
     
     setIsContextLoading(false);
-  }, [session, status]);
+  }, [session, authStatus]);
 
   return (
-    <DashboardContext.Provider value={{ user, role, isLoading: isContextLoading }}>
+    <DashboardContext.Provider value={{ user, role, status, isLoading: isContextLoading }}>
       {children}
     </DashboardContext.Provider>
   );
