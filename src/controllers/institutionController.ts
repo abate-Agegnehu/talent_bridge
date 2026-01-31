@@ -20,6 +20,7 @@ import {
   getAdvisorsByStudentId,
   getStudentsByAdvisorId,
   getCollegeById,
+  getCollegesByUniversityId,
   getDepartmentById,
   getUniversityById,
   assignAdvisorToStudent,
@@ -276,6 +277,21 @@ export async function handleGetCollegeById(
     return {
       status: 500,
       body: { message: "Failed to fetch college" },
+    };
+  }
+}
+
+export async function handleGetCollegesByUniversityId(
+  universityId: number,
+): Promise<ControllerResult<unknown>> {
+  try {
+    const colleges = await getCollegesByUniversityId(universityId);
+    return { status: 200, body: colleges };
+  } catch (error) {
+    console.error("Error fetching colleges:", error);
+    return {
+      status: 500,
+      body: { message: "Failed to fetch colleges" },
     };
   }
 }

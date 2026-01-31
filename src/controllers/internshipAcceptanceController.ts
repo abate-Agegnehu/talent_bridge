@@ -4,6 +4,7 @@ import {
   getInternshipAcceptancesByStudentId,
   CreateInternshipAcceptancePayload,
 } from "@/services/internshipAcceptanceService";
+import { AccepanceStatus } from "@/generated/prisma/enums";
 
 type ControllerResult<T> = {
   status: number;
@@ -18,7 +19,7 @@ export async function handleCreateInternshipAcceptance(
   }
 
   const value = payload as Record<string, unknown>;
-  const { internshipId, studentId, companyId, letter } = value;
+  const { internshipId, studentId, companyId, letter, status } = value;
 
   if (
     typeof internshipId !== "number" ||
@@ -35,12 +36,25 @@ export async function handleCreateInternshipAcceptance(
     };
   }
 
+  if (
+    !status ||
+    !Object.values(AccepanceStatus).includes(status as AccepanceStatus)
+  ) {
+    return {
+      status: 400,
+      body: {
+        message: `Status must be one of: ${Object.values(AccepanceStatus).join(", ")}`,
+      },
+    };
+  }
+
   try {
     const acceptance = await createInternshipAcceptance({
       internshipId,
       studentId,
       companyId,
       letter,
+      status: status as AccepanceStatus,
     });
     return { status: 201, body: acceptance };
   } catch (error) {
