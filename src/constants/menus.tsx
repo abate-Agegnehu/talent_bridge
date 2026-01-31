@@ -138,7 +138,6 @@ export const MENU_ITEMS: Record<Role, {
       label: "Reports & Comms",
       items: [
         { label: "Reports", icon: FileText, href: "/dashboard/reports" },
-        { label: "Chat", icon: MessageSquare, href: "/dashboard/chat" },
       ]
     }
   ],

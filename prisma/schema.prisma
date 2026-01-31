@@ -130,6 +130,7 @@ enum ApplicationStatus {
   PENDING
   ACCEPTED
   REJECTED
+  COMPLETED
 }
 
 model Internship {
@@ -238,6 +239,10 @@ model AdvisorAssignment {
   @@unique([advisorId, studentId]) // prevent duplicate assignment
 }
 
+enum AccepanceStatus{
+  ACCEPTED
+  REJECTED
+}
 
 model InternshipAcceptance {
   id            Int      @id @default(autoincrement())
@@ -247,6 +252,7 @@ model InternshipAcceptance {
   companyId     Int
   studentId     Int
   departmentId  Int?
+  status AccepanceStatus?
 
   internship    Internship @relation(fields: [internshipId], references: [id], onDelete: Cascade)
   company       Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)

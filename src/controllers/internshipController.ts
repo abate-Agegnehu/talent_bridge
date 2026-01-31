@@ -410,13 +410,11 @@ function validateApplicationStatusUpdatePayload(
   const value = payload as Record<string, unknown>;
   const status = value.status;
 
-  if (
-    !status ||
-    !Object.values(ApplicationStatus).includes(status as ApplicationStatus)
-  ) {
+  const allowedStatuses = [...Object.values(ApplicationStatus), "COMPLETED"];
+  if (!status || !allowedStatuses.includes(status as ApplicationStatus | "COMPLETED")) {
     return {
       valid: false,
-      message: `Status must be one of: ${Object.values(ApplicationStatus).join(", ")}`,
+      message: `Status must be one of: ${allowedStatuses.join(", ")}`,
     };
   }
 
@@ -439,7 +437,8 @@ export async function handleUpdateInternshipApplicationStatus(
 
   try {
     const value = payload as Record<string, unknown>;
-    const status = value.status as ApplicationStatus;
+    const statusStr = value.status as string;
+    const status = statusStr as unknown as ApplicationStatus;
 
     const application = await updateInternshipApplicationStatus(
       studentId,

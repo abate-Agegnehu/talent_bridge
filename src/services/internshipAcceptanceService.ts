@@ -1,10 +1,12 @@
 import prisma from "@/lib/prisma";
+import { AccepanceStatus } from "@/generated/prisma/enums";
 
 export type CreateInternshipAcceptancePayload = {
   internshipId: number;
   studentId: number;
   companyId: number;
   letter: string;
+  status: AccepanceStatus;
 };
 
 export async function createInternshipAcceptance(
@@ -16,6 +18,7 @@ export async function createInternshipAcceptance(
       studentId: payload.studentId,
       companyId: payload.companyId,
       letter: payload.letter,
+      status: payload.status,
     },
     include: {
       internship: true,
